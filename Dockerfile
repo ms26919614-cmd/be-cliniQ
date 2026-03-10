@@ -4,7 +4,7 @@
 # ===========================
 
 # Stage 1: Build
-FROM eclipse-temurin:17-jdk-alpine AS build
+FROM --platform=linux/amd64 eclipse-temurin:17-jdk AS build
 WORKDIR /app
 
 # Copy Maven wrapper and pom
@@ -12,7 +12,8 @@ COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 
-# Make mvnw executable
+# Install required tools and make mvnw executable
+RUN apt-get update && apt-get install -y unzip && rm -rf /var/lib/apt/lists/*
 RUN chmod +x mvnw
 
 # Download dependencies (cached layer)
@@ -25,11 +26,11 @@ COPY src src
 RUN ./mvnw package -DskipTests -B
 
 # Stage 2: Run
-FROM eclipse-temurin:17-jre-alpine
+FROM --platform=linux/amd64 eclipse-temurin:17-jre
 WORKDIR /app
 
 # Create non-root user
-RUN addgroup -S cliniq && adduser -S cliniq -G cliniq
+RUN groupadd -r cliniq && useradd -r -g cliniq cliniq
 
 # Copy the built jar
 COPY --from=build /app/target/*.jar app.jar
@@ -45,7 +46,7 @@ EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
-    CMD wget -qO- http://localhost:8080/api/queue/display || exit 1
+    CMD curl -f http://localhost:8080/api/queue/display || exit 1
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
