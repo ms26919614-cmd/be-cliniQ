@@ -1,0 +1,77 @@
+{
+  "family": "cliniq-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::719279823817:role/cliniq-ecs-execution-role",
+  "containerDefinitions": [
+    {
+      "name": "cliniq-backend",
+      "image": "719279823817.dkr.ecr.us-east-1.amazonaws.com/cliniq-backend:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "SPRING_DATASOURCE_URL",
+          "valueFrom": "arn:aws:ssm:us-east-1:719279823817:parameter/cliniq/db-url"
+        },
+        {
+          "name": "SPRING_DATASOURCE_USERNAME",
+          "valueFrom": "arn:aws:ssm:us-east-1:719279823817:parameter/cliniq/db-username"
+        },
+        {
+          "name": "SPRING_DATASOURCE_PASSWORD",
+          "valueFrom": "arn:aws:ssm:us-east-1:719279823817:parameter/cliniq/db-password"
+        },
+        {
+          "name": "JWT_SECRET",
+          "valueFrom": "arn:aws:ssm:us-east-1:719279823817:parameter/cliniq/jwt-secret"
+        }
+      ],
+      "environment": [
+        {
+          "name": "SERVER_PORT",
+          "value": "8080"
+        },
+        {
+          "name": "JWT_EXPIRATION_MS",
+          "value": "86400000"
+        },
+        {
+          "name": "CORS_ALLOWED_ORIGINS",
+          "value": "*"
+        },
+        {
+          "name": "JPA_DDL_AUTO",
+          "value": "validate"
+        },
+        {
+          "name": "JPA_SHOW_SQL",
+          "value": "false"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/cliniq-backend",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8080/api/queue/display || exit 1"],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}
