@@ -7,15 +7,14 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AppointmentSlotResponse {
+public class DayOverrideResponse {
 
     private Long id;
-    private String dayOfWeek;
+    private String overrideDate;
+    private boolean workingDay;
     private String startTime;
     private String endTime;
-    private Integer maxPatients;
-    private boolean active;
-    private Long bookedCount;
+    private String reason;
     private String createdAt;
     private String updatedAt;
 }
