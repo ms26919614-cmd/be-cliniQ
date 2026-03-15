@@ -70,6 +70,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/queue/manage/**").hasRole("DOCTOR")
                         .requestMatchers("/api/settings/**").hasRole("DOCTOR")
                         .requestMatchers("/api/appointment-slots/**").hasRole("DOCTOR")
+                        .requestMatchers("/api/appointments/**").hasAnyRole("RECEPTIONIST", "DOCTOR")
                         .requestMatchers("/api/patients/**").hasAnyRole("RECEPTIONIST", "DOCTOR")
                         .requestMatchers("/api/queue/**").hasAnyRole("RECEPTIONIST", "DOCTOR")
                         .anyRequest().authenticated()
