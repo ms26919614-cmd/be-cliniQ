@@ -66,7 +66,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/queue/display/**").permitAll()
+                        .requestMatchers("/api/appointment-slots/available/**").permitAll()
                         .requestMatchers("/api/queue/manage/**").hasRole("DOCTOR")
+                        .requestMatchers("/api/settings/**").hasRole("DOCTOR")
+                        .requestMatchers("/api/appointment-slots/**").hasRole("DOCTOR")
                         .requestMatchers("/api/patients/**").hasAnyRole("RECEPTIONIST", "DOCTOR")
                         .requestMatchers("/api/queue/**").hasAnyRole("RECEPTIONIST", "DOCTOR")
                         .anyRequest().authenticated()
