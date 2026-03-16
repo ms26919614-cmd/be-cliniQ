@@ -6,12 +6,16 @@ import com.cliniq.dto.AppointmentResponse;
 import com.cliniq.entity.Appointment;
 import com.cliniq.entity.AppointmentSlot;
 import com.cliniq.entity.Patient;
+import com.cliniq.entity.Visit;
 import com.cliniq.enums.AppointmentStatus;
 import com.cliniq.enums.DayOfWeekEnum;
+import com.cliniq.enums.VisitStatus;
+import com.cliniq.enums.VisitType;
 import com.cliniq.exception.ResourceNotFoundException;
 import com.cliniq.repository.AppointmentRepository;
 import com.cliniq.repository.AppointmentSlotRepository;
 import com.cliniq.repository.PatientRepository;
+import com.cliniq.repository.VisitRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +35,7 @@ public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final AppointmentSlotRepository appointmentSlotRepository;
     private final PatientRepository patientRepository;
+    private final VisitRepository visitRepository;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
@@ -233,6 +238,32 @@ public class AppointmentService {
 
         if (status == AppointmentStatus.CANCELLED) {
             appointment.setCancelledAt(LocalDateTime.now());
+        }
+
+        // When checking in, create a Visit entry to join the unified queue
+        if (status == AppointmentStatus.CHECKED_IN) {
+            // Use today's date (not appointmentDate) because the patient is
+            // physically present NOW and joining today's live queue.
+            LocalDate today = LocalDate.now();
+
+            // Generate next token number for today
+            Integer maxToken = visitRepository.findMaxTokenNumberByDate(today).orElse(0);
+            int nextToken = maxToken + 1;
+
+            Visit visit = Visit.builder()
+                    .tokenNumber(nextToken)
+                    .visitDate(today)
+                    .patient(appointment.getPatient())
+                    .status(VisitStatus.WAITING)
+                    .visitType(VisitType.APPOINTMENT)
+                    .appointment(appointment)
+                    .appointmentTime(appointment.getStartTime())
+                    .build();
+            visitRepository.save(visit);
+
+            appointment.setTokenNumber(nextToken);
+            log.info("Appointment checked in: ID={}, Token={}, SlotTime={}",
+                    appointmentId, nextToken, appointment.getStartTime());
         }
 
         Appointment saved = appointmentRepository.save(appointment);

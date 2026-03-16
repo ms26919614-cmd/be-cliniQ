@@ -94,3 +94,17 @@ CREATE TABLE IF NOT EXISTS cliniq.day_overrides (
 );
 
 CREATE INDEX IF NOT EXISTS idx_day_overrides_date ON cliniq.day_overrides(override_date);
+
+-- ===========================
+-- Visits Table: Add columns for queue merge (US8)
+-- visit_type: WALK_IN or APPOINTMENT
+-- appointment_id: link to appointment when checked in
+-- appointment_time: the slot start time (used for priority ordering)
+-- ===========================
+ALTER TABLE cliniq.visits ADD COLUMN IF NOT EXISTS visit_type VARCHAR(20) NOT NULL DEFAULT 'WALK_IN'
+    CHECK (visit_type IN ('WALK_IN', 'APPOINTMENT'));
+ALTER TABLE cliniq.visits ADD COLUMN IF NOT EXISTS appointment_id BIGINT REFERENCES cliniq.appointments(id);
+ALTER TABLE cliniq.visits ADD COLUMN IF NOT EXISTS appointment_time TIME;
+
+CREATE INDEX IF NOT EXISTS idx_visits_appointment ON cliniq.visits(appointment_id);
+CREATE INDEX IF NOT EXISTS idx_visits_type_status ON cliniq.visits(visit_type, status, visit_date);
