@@ -4,6 +4,7 @@ import com.cliniq.dto.QueueDisplayResponse;
 import com.cliniq.dto.VisitResponse;
 import com.cliniq.entity.Visit;
 import com.cliniq.enums.VisitStatus;
+import com.cliniq.enums.VisitType;
 import com.cliniq.exception.ResourceNotFoundException;
 import com.cliniq.repository.VisitRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,10 +55,31 @@ public class QueueService {
         return mapToVisitResponse(visit);
     }
 
+    /**
+     * Queue merge logic (US8):
+     *
+     * Priority order when calling next patient:
+     * 1. APPOINTMENT visits whose appointmentTime <= current time (slot is due or overdue),
+     *    ordered by appointmentTime ASC (earliest slot first).
+     *    These get TOP priority because their booked time has arrived.
+     *
+     * 2. ALL remaining WAITING visits (walk-ins AND early check-in appointments
+     *    whose slot time hasn't arrived yet), ordered by tokenNumber ASC.
+     *    Early check-in appointments are treated fairly — they queue alongside
+     *    walk-ins by arrival order instead of sitting idle.
+     *
+     * Scenarios:
+     * - 10:00 appointment checked in at 10:05 → Step 1 picks them (slot overdue)
+     * - 10:30 appointment checked in at 9:00 → Step 2 treats them as token #N
+     *   alongside walk-ins. If queue moves fast, they may be seen before 10:30.
+     *   If still waiting at 10:30, Step 1 picks them with top priority.
+     * - Walk-ins always go by token order in Step 2
+     */
     @Transactional
     public VisitResponse callNextPatient() {
         LocalDate today = LocalDate.now();
-        log.info("Calling next patient for date: {}", today);
+        LocalTime now = LocalTime.now();
+        log.info("Calling next patient for date: {}, time: {}", today, now);
 
         // Check if there's already a patient IN_PROGRESS
         List<Visit> inProgress = visitRepository
@@ -67,22 +91,39 @@ public class QueueService {
                             + "). Complete or mark as no-show before calling next.");
         }
 
-        // Find next WAITING patient
-        Visit nextVisit = visitRepository
+        // Step 1: Look for WAITING appointment visits whose slot time is due (<= now)
+        Optional<Visit> nextAppointment = visitRepository
+                .findFirstEligibleAppointment(today, VisitStatus.WAITING, now);
+        log.info("Checking eligible appointments at time {}", now);
+
+        if (nextAppointment.isPresent()) {
+            Visit next = nextAppointment.get();
+            next.setStatus(VisitStatus.IN_PROGRESS);
+            next.setCalledAt(LocalDateTime.now());
+            next = visitRepository.save(next);
+            log.info("Appointment patient called (slot due): Token {} (slot {}), Patient: {}",
+                    next.getTokenNumber(), next.getAppointmentTime(), next.getPatient().getName());
+            return mapToVisitResponse(next);
+        }
+
+        // Step 2: No due appointments — call next WAITING patient by token order.
+        // This includes BOTH walk-ins AND early check-in appointments (whose
+        // slot time hasn't arrived yet). Fair first-come-first-served ordering.
+        Visit nextPatient = visitRepository
                 .findFirstByVisitDateAndStatusOrderByTokenNumberAsc(today, VisitStatus.WAITING)
                 .orElseThrow(() -> {
                     log.info("No waiting patients in queue for today");
                     return new ResourceNotFoundException("No waiting patients in the queue");
                 });
 
-        nextVisit.setStatus(VisitStatus.IN_PROGRESS);
-        nextVisit.setCalledAt(LocalDateTime.now());
-        nextVisit = visitRepository.save(nextVisit);
+        nextPatient.setStatus(VisitStatus.IN_PROGRESS);
+        nextPatient.setCalledAt(LocalDateTime.now());
+        nextPatient = visitRepository.save(nextPatient);
 
-        log.info("Next patient called: Token {} - {}", nextVisit.getTokenNumber(),
-                nextVisit.getPatient().getName());
+        log.info("Patient called (token order): Token {} [{}] - {}",
+                nextPatient.getTokenNumber(), nextPatient.getVisitType(), nextPatient.getPatient().getName());
 
-        return mapToVisitResponse(nextVisit);
+        return mapToVisitResponse(nextPatient);
     }
 
     public List<VisitResponse> getTodayQueue() {
@@ -104,11 +145,15 @@ public class QueueService {
         List<Visit> allVisits = visitRepository.findByVisitDateOrderByTokenNumberAsc(today);
 
         // Find current token (IN_PROGRESS)
-        Integer currentToken = allVisits.stream()
+        Visit currentVisit = allVisits.stream()
                 .filter(v -> v.getStatus() == VisitStatus.IN_PROGRESS)
-                .map(Visit::getTokenNumber)
                 .findFirst()
                 .orElse(null);
+        Integer currentToken = currentVisit != null ? currentVisit.getTokenNumber() : null;
+        String currentPatientName = currentVisit != null ? currentVisit.getPatient().getName() : null;
+        String currentVisitType = currentVisit != null ? currentVisit.getVisitType().name() : null;
+        String currentAppointmentTime = (currentVisit != null && currentVisit.getAppointmentTime() != null)
+                ? currentVisit.getAppointmentTime().toString() : null;
 
         // Waiting tokens
         List<QueueDisplayResponse.TokenDisplay> waitingTokens = allVisits.stream()
@@ -116,6 +161,9 @@ public class QueueService {
                 .map(v -> QueueDisplayResponse.TokenDisplay.builder()
                         .tokenNumber(v.getTokenNumber())
                         .status(v.getStatus().name())
+                        .visitType(v.getVisitType().name())
+                        .patientName(v.getPatient().getName())
+                        .appointmentTime(v.getAppointmentTime() != null ? v.getAppointmentTime().toString() : null)
                         .build())
                 .collect(Collectors.toList());
 
@@ -125,6 +173,9 @@ public class QueueService {
                 .map(v -> QueueDisplayResponse.TokenDisplay.builder()
                         .tokenNumber(v.getTokenNumber())
                         .status(v.getStatus().name())
+                        .visitType(v.getVisitType().name())
+                        .patientName(v.getPatient().getName())
+                        .appointmentTime(v.getAppointmentTime() != null ? v.getAppointmentTime().toString() : null)
                         .build())
                 .collect(Collectors.toList());
 
@@ -134,6 +185,9 @@ public class QueueService {
         return QueueDisplayResponse.builder()
                 .date(today)
                 .currentToken(currentToken)
+                .currentPatientName(currentPatientName)
+                .currentVisitType(currentVisitType)
+                .currentAppointmentTime(currentAppointmentTime)
                 .totalTokens(allVisits.size())
                 .waitingTokens(waitingTokens)
                 .completedTokens(completedTokens)
@@ -162,6 +216,8 @@ public class QueueService {
                 .phone(visit.getPatient().getPhone())
                 .visitDate(visit.getVisitDate())
                 .status(visit.getStatus().name())
+                .visitType(visit.getVisitType().name())
+                .appointmentTime(visit.getAppointmentTime() != null ? visit.getAppointmentTime().toString() : null)
                 .createdAt(visit.getCreatedAt())
                 .calledAt(visit.getCalledAt())
                 .completedAt(visit.getCompletedAt())

@@ -16,6 +16,9 @@ public class QueueDisplayResponse {
 
     private LocalDate date;
     private Integer currentToken;
+    private String currentPatientName;
+    private String currentVisitType;
+    private String currentAppointmentTime;
     private Integer totalTokens;
     private List<TokenDisplay> waitingTokens;
     private List<TokenDisplay> completedTokens;
@@ -27,5 +30,8 @@ public class QueueDisplayResponse {
     public static class TokenDisplay {
         private Integer tokenNumber;
         private String status;
+        private String visitType;        // WALK_IN or APPOINTMENT
+        private String patientName;
+        private String appointmentTime;  // HH:mm if appointment, null for walk-ins
     }
 }

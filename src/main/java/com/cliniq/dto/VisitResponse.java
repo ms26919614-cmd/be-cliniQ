@@ -20,6 +20,8 @@ public class VisitResponse {
     private String phone;
     private LocalDate visitDate;
     private String status;
+    private String visitType;        // WALK_IN or APPOINTMENT
+    private String appointmentTime;  // HH:mm if appointment, null for walk-ins
     private LocalDateTime createdAt;
     private LocalDateTime calledAt;
     private LocalDateTime completedAt;
