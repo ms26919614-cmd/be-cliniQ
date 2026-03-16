@@ -12,6 +12,14 @@
 		{
 			"key": "token",
 			"value": ""
+		},
+		{
+			"key": "slotId",
+			"value": ""
+		},
+		{
+			"key": "appointmentId",
+			"value": ""
 		}
 	],
 	"item": [
@@ -354,6 +362,998 @@
 							"raw": "{{baseUrl}}/api/queue/today",
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "queue", "today"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Clinic Settings (Doctor)",
+			"item": [
+				{
+					"name": "Get Clinic Settings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/settings",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "settings"]
+						}
+					}
+				},
+				{
+					"name": "Update Clinic Settings",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"clinicName\": \"Clinic Queue\",\n    \"workingStartTime\": \"08:00\",\n    \"workingEndTime\": \"17:00\",\n    \"slotDurationMinutes\": 15,\n    \"maxPatientsPerSlot\": 1,\n    \"breakStartTime\": \"12:00\",\n    \"breakEndTime\": \"13:00\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/settings",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "settings"]
+						}
+					}
+				},
+				{
+					"name": "Update Settings - 20 Min Slots, 2 Patients",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"clinicName\": \"Clinic Queue\",\n    \"workingStartTime\": \"09:00\",\n    \"workingEndTime\": \"16:00\",\n    \"slotDurationMinutes\": 20,\n    \"maxPatientsPerSlot\": 2,\n    \"breakStartTime\": \"12:00\",\n    \"breakEndTime\": \"13:00\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/settings",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "settings"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Appointment Slots (Doctor)",
+			"item": [
+				{
+					"name": "Get All Slots",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointment-slots",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointment-slots"]
+						}
+					}
+				},
+				{
+					"name": "Get Slots by Day - Monday",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointment-slots/day/MONDAY",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointment-slots", "day", "MONDAY"]
+						}
+					}
+				},
+				{
+					"name": "Get Available Slots for Date (Public)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/appointment-slots/available?date=2026-03-16",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointment-slots", "available"],
+							"query": [
+								{
+									"key": "date",
+									"value": "2026-03-16"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Single Slot",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('slotId', jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"dayOfWeek\": \"MONDAY\",\n    \"startTime\": \"09:00\",\n    \"endTime\": \"09:15\",\n    \"maxPatients\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/appointment-slots",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointment-slots"]
+						}
+					}
+				},
+				{
+					"name": "Update Slot",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"dayOfWeek\": \"MONDAY\",\n    \"startTime\": \"09:00\",\n    \"endTime\": \"09:20\",\n    \"maxPatients\": 2\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/appointment-slots/{{slotId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointment-slots", "{{slotId}}"]
+						}
+					}
+				},
+				{
+					"name": "Toggle Slot Active/Inactive",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointment-slots/{{slotId}}/toggle",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointment-slots", "{{slotId}}", "toggle"]
+						}
+					}
+				},
+				{
+					"name": "Delete Slot",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointment-slots/{{slotId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointment-slots", "{{slotId}}"]
+						}
+					}
+				},
+				{
+					"name": "Generate Slots - Weekdays",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"daysOfWeek\": [\"MONDAY\", \"TUESDAY\", \"WEDNESDAY\", \"THURSDAY\", \"FRIDAY\"],\n    \"startTime\": \"08:00\",\n    \"endTime\": \"17:00\",\n    \"slotDurationMinutes\": 15,\n    \"maxPatientsPerSlot\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/appointment-slots/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointment-slots", "generate"]
+						}
+					}
+				},
+				{
+					"name": "Generate Slots - Use Clinic Settings",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"daysOfWeek\": [\"SATURDAY\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/appointment-slots/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointment-slots", "generate"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Appointments",
+			"item": [
+				{
+					"name": "Book Appointment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('appointmentId', jsonData.id);",
+									"    pm.test('Appointment booked', function() {",
+									"        pm.expect(jsonData.status).to.eql('BOOKED');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"patientName\": \"Kasun Perera\",\n    \"phone\": \"0771234567\",\n    \"slotId\": {{slotId}},\n    \"appointmentDate\": \"2026-03-16\",\n    \"notes\": \"Regular checkup\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments"]
+						}
+					}
+				},
+				{
+					"name": "Book Appointment - Patient 2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"patientName\": \"Nimal Silva\",\n    \"phone\": \"0779876543\",\n    \"slotId\": {{slotId}},\n    \"appointmentDate\": \"2026-03-17\",\n    \"notes\": \"Follow-up visit\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments"]
+						}
+					}
+				},
+				{
+					"name": "Book Duplicate (Should Fail)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"patientName\": \"Kasun Perera\",\n    \"phone\": \"0771234567\",\n    \"slotId\": {{slotId}},\n    \"appointmentDate\": \"2026-03-16\",\n    \"notes\": \"Duplicate test\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments"]
+						}
+					}
+				},
+				{
+					"name": "Book Past Date (Should Fail)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"patientName\": \"Test User\",\n    \"phone\": \"0770001111\",\n    \"slotId\": {{slotId}},\n    \"appointmentDate\": \"2025-01-01\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments"]
+						}
+					}
+				},
+				{
+					"name": "Get Appointment by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/{{appointmentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "{{appointmentId}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Appointments by Date",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/date/2026-03-16",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "date", "2026-03-16"]
+						}
+					}
+				},
+				{
+					"name": "Get Appointments by Date & Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/date/2026-03-16/status/BOOKED",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "date", "2026-03-16", "status", "BOOKED"]
+						}
+					}
+				},
+				{
+					"name": "Get Appointments by Patient",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/patient/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "patient", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Appointments by Date Range",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/range?startDate=2026-03-16&endDate=2026-03-20",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "range"],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2026-03-16"
+								},
+								{
+									"key": "endDate",
+									"value": "2026-03-20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Appointment Status - Check In",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"CHECKED_IN\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/{{appointmentId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "{{appointmentId}}", "status"]
+						}
+					}
+				},
+				{
+					"name": "Reschedule Appointment",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"newSlotId\": {{slotId}},\n    \"newAppointmentDate\": \"2026-03-23\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/{{appointmentId}}/reschedule",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "{{appointmentId}}", "reschedule"]
+						}
+					}
+				},
+				{
+					"name": "Cancel Appointment",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/{{appointmentId}}/cancel",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "{{appointmentId}}", "cancel"]
+						}
+					}
+				},
+				{
+					"name": "Cancel Already Cancelled (Should Fail)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/{{appointmentId}}/cancel",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "{{appointmentId}}", "cancel"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Day Schedules (Doctor)",
+			"item": [
+				{
+					"name": "Get All Day Schedules",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/day-schedules",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "day-schedules"]
+						}
+					}
+				},
+				{
+					"name": "Get Schedule - Monday",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/day-schedules/MONDAY",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "day-schedules", "MONDAY"]
+						}
+					}
+				},
+				{
+					"name": "Update Schedule - Monday",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"startTime\": \"08:00\",\n    \"endTime\": \"17:00\",\n    \"workingDay\": true,\n    \"breaks\": [\n        {\n            \"breakStart\": \"12:00\",\n            \"breakEnd\": \"13:00\",\n            \"label\": \"Lunch Break\"\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/day-schedules/MONDAY",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "day-schedules", "MONDAY"]
+						}
+					}
+				},
+				{
+					"name": "Update Schedule - Saturday (Non-working)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"startTime\": \"09:00\",\n    \"endTime\": \"13:00\",\n    \"workingDay\": false,\n    \"breaks\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/day-schedules/SATURDAY",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "day-schedules", "SATURDAY"]
+						}
+					}
+				},
+				{
+					"name": "Bulk Update Schedules",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"dayOfWeek\": \"MONDAY\",\n        \"startTime\": \"08:00\",\n        \"endTime\": \"17:00\",\n        \"workingDay\": true,\n        \"breaks\": [\n            {\n                \"breakStart\": \"12:00\",\n                \"breakEnd\": \"13:00\",\n                \"label\": \"Lunch Break\"\n            }\n        ]\n    },\n    {\n        \"dayOfWeek\": \"TUESDAY\",\n        \"startTime\": \"08:00\",\n        \"endTime\": \"17:00\",\n        \"workingDay\": true,\n        \"breaks\": [\n            {\n                \"breakStart\": \"12:00\",\n                \"breakEnd\": \"13:00\",\n                \"label\": \"Lunch Break\"\n            }\n        ]\n    }\n]"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/day-schedules/bulk",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "day-schedules", "bulk"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Clinic Holidays (Doctor)",
+			"item": [
+				{
+					"name": "Get All Holidays",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/holidays",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "holidays"]
+						}
+					}
+				},
+				{
+					"name": "Get Holidays by Range",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/holidays/range?startDate=2026-03-01&endDate=2026-03-31",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "holidays", "range"],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2026-03-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2026-03-31"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Check if Date is Holiday",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/holidays/check?date=2026-03-18",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "holidays", "check"],
+							"query": [
+								{
+									"key": "date",
+									"value": "2026-03-18"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Holiday",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"holidayDate\": \"2026-04-14\",\n    \"description\": \"Sinhala and Tamil New Year\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/holidays",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "holidays"]
+						}
+					}
+				},
+				{
+					"name": "Update Holiday",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"holidayDate\": \"2026-04-14\",\n    \"description\": \"Sinhala and Tamil New Year - National Holiday\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/holidays/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "holidays", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete Holiday",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/holidays/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "holidays", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Day Overrides (Doctor)",
+			"item": [
+				{
+					"name": "Get All Day Overrides",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/day-overrides",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "day-overrides"]
+						}
+					}
+				},
+				{
+					"name": "Get Override by Date",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/day-overrides/date?date=2026-03-21",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "day-overrides", "date"],
+							"query": [
+								{
+									"key": "date",
+									"value": "2026-03-21"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Overrides by Range",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/day-overrides/range?startDate=2026-03-01&endDate=2026-03-31",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "day-overrides", "range"],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2026-03-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2026-03-31"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Override - Make Sunday Working",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"overrideDate\": \"2026-03-22\",\n    \"workingDay\": true,\n    \"startTime\": \"09:00\",\n    \"endTime\": \"13:00\",\n    \"reason\": \"Special Sunday clinic\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/day-overrides",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "day-overrides"]
+						}
+					}
+				},
+				{
+					"name": "Create Override - Mark Wednesday Non-working",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"overrideDate\": \"2026-03-25\",\n    \"workingDay\": false,\n    \"reason\": \"Doctor personal leave\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/day-overrides",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "day-overrides"]
+						}
+					}
+				},
+				{
+					"name": "Delete Override by ID",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/day-overrides/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "day-overrides", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete Override by Date",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/day-overrides/date?date=2026-03-22",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "day-overrides", "date"],
+							"query": [
+								{
+									"key": "date",
+									"value": "2026-03-22"
+								}
+							]
 						}
 					}
 				}
